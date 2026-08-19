@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>唐沛奇 · 纸间手账 · 叙事主页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --paper: #F7FAF6;
+      --paper-card: rgba(247, 250, 246, 0.55);
+      --paper-soft: rgba(247, 250, 246, 0.82);
+      --blue: #94BFD8;
+      --blue-hover: #73A6C4;
+      --green: #A8C99A;
+      --green-hover: #8BB47A;
+      --honey: #E9D39C;
+      --ink: #3C4A44;
+      --ink-soft: #677A73;
+      --ink-faint: #94A8A0;
+      --line: #D1E0D9;
+      --line-deep: #B9CFC4;
+      --texture: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D1E0D9' fill-opacity='0.4'%3E%3Ccircle cx='18' cy='20' r='1.4'/%3E%3Ccircle cx='58' cy='36' r='1'/%3E%3Ccircle cx='40' cy='72' r='0.8'/%3E%3Ccircle cx='12' cy='58' r='0.6'/%3E%3Ccircle cx='70' cy='10' r='1.1'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+    html, body { -webkit-overflow-scrolling: touch; }
+    body {
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      background-image: var(--texture);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(148, 191, 216, 0.10), transparent 42%),
+        radial-gradient(circle at 88% 30%, rgba(168, 201, 154, 0.10), transparent 40%),
+        radial-gradient(circle at 60% 90%, rgba(233, 211, 156, 0.08), transparent 38%),
+        radial-gradient(ellipse at 94% 8%, rgba(120, 80, 40, 0.05), transparent 28%);
+    }
+    .hand-font {
+      font-family: "Kaiti SC", "STKaiti", "KaiTi", "DFKai-SB", cursive, "PingFang SC", sans-serif;
+      letter-spacing: 0.04em;
+    }
+
+    /* ---------- 滚动进度条（顶部） ---------- */
+    #scrollProgress {
+      position: fixed; top: 0; left: 0; z-index: 130;
+      width: 100%; height: 4px; transform-origin: 0 0; transform: scaleX(0);
+      background: linear-gradient(90deg, #22d3ee, #34d399);
+      box-shadow: 0 1px 6px rgba(52, 211, 153, 0.5);
+      will-change: transform;
+    }
+
+    /* ---------- 打字机 ---------- */
+    .type-cursor {
+      display: inline-block; width: 2px; height: 1.05em; margin-left: 3px;
+      vertical-align: -0.12em; border-radius: 2px; background: var(--blue-hover);
+      animation: breathe 1.2s ease-in-out infinite;
+    }
+    @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ---------- 滚动渐入（JS 门控隐藏，脚本未执行时元素默认可见，杜绝白屏） ---------- */
+    .reveal { opacity: 1; transform: translateY(0); will-change: opacity, transform; transition: opacity 0.7s cubic-bezier(.22,1,.36,1), transform 0.7s cubic-bezier(.22,1,.36,1), box-shadow 0.25s ease, border-color 0.3s ease; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal * { transition: none !important; }
+    }
+
+    /* ---------- 3D 视差（桌面） ---------- */
+    .bento-grid { display: grid; gap: 22px; grid-template-columns: 1fr; }
+    @media (min-width: 768px) { .bento-grid { grid-template-columns: repeat(6, 1fr); } }
+
+    .bento-card {
+      position: relative;
+      background: var(--paper-card);
+      border: 1px solid var(--line);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 14px 32px -16px rgba(60, 74, 68, 0.18);
+      will-change: transform;
+    }
+    .bento-card::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(var(--line-deep) 0.5px, transparent 0.5px);
+      background-size: 13px 13px; opacity: 0.22;
+    }
+    .bento-card:hover { border-color: var(--blue); box-shadow: 0 18px 42px -16px rgba(115, 166, 196, 0.35); }
+    .bento-inner { position: relative; z-index: 1; height: 100%; padding: 24px; }
+
+    /* ---------- 手账贴纸 / 素材层 ---------- */
+    .deco { position: absolute; pointer-events: none; z-index: 3; }
+    .grad-text { background: linear-gradient(120deg, var(--blue-hover), var(--green-hover) 60%, #c2a563); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .tape {
+      position: absolute; width: 74px; height: 22px; z-index: 4;
+      background: rgba(233, 211, 156, 0.55);
+      border-left: 1px dashed rgba(60, 74, 68, 0.18);
+      border-right: 1px dashed rgba(60, 74, 68, 0.18);
+      transform: rotate(-7deg); box-shadow: 0 2px 5px rgba(60, 74, 68, 0.08);
+      pointer-events: none;
+    }
+    .tape-green { background: rgba(168, 201, 154, 0.5); }
+    .tape-blue { background: rgba(148, 191, 216, 0.45); }
+    .tape-dot { background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 2px); background-size: 8px 8px; }
+    .tape-line { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.4) 0 4px, transparent 4px 10px); }
+
+    .ticket {
+      position: relative; background: linear-gradient(180deg, #fdfaf2, #f6efdd);
+      border: 1px solid #d9c9a6; border-radius: 6px; padding: 8px 14px 8px 12px;
+      box-shadow: 0 5px 12px rgba(60, 74, 68, 0.18); transform: rotate(-3deg);
+      color: #6b5b3a; font-size: 0.66rem; line-height: 1.5;
+    }
+    .ticket::before, .ticket::after {
+      content: ""; position: absolute; top: 50%; width: 15px; height: 15px;
+      border-radius: 50%; background: var(--paper); border: 1px solid #d9c9a6; transform: translateY(-50%);
+    }
+    .ticket::before { left: -9px; }
+    .ticket::after { right: -9px; }
+    .barcode { height: 15px; width: 62px; background: repeating-linear-gradient(90deg, #6b5b3a 0 2px, transparent 2px 4px, #6b5b3a 4px 5px, transparent 5px 8px); }
+
+    .stamp {
+      --s: 5px;
+      position: relative; background: #fdf8ea; padding: 7px; width: fit-content;
+      box-shadow: 0 6px 14px rgba(60, 74, 68, 0.22); transform: rotate(4deg);
+      -webkit-mask:
+        radial-gradient(var(--s) at 50% 0%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 0% 50%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 100% 50%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 50% 100%, #000 98%, transparent 100%) 0 0 / 100% 100%;
+      mask:
+        radial-gradient(var(--s) at 50% 0%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 0% 50%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 100% 50%, #000 98%, transparent 100%) 0 0 / 100% 100%,
+        radial-gradient(var(--s) at 50% 100%, #000 98%, transparent 100%) 0 0 / 100% 100%;
+    }
+    .stamp::after { content: ""; position: absolute; inset: 3px; border: 1px dashed rgba(120, 90, 50, 0.45); pointer-events: none; }
+    .stamp-img { width: 58px; height: 54px; object-fit: cover; display: block; }
+    .stamp-tag { text-align: center; font-size: 0.5rem; color: #8a7448; margin-top: 3px; letter-spacing: 1px; font-family: Georgia, serif; }
+
+    .wax {
+      width: 64px; height: 64px; border-radius: 50%; position: relative;
+      background: radial-gradient(circle at 35% 28%, #d4584a, #a02a22 55%, #7c1d16);
+      box-shadow: 0 8px 18px rgba(60, 20, 15, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.28), inset 0 3px 6px rgba(255, 255, 255, 0.16);
+    }
+    .wax::before {
+      content: "唐"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: "Kaiti SC", "STKaiti", serif; font-size: 1.7rem; color: #f7e2c8;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3); transform: rotate(-8deg);
+    }
+    .wax::after {
+      content: ""; position: absolute; bottom: -9px; left: 16px; width: 12px; height: 14px;
+      background: #a02a22; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      box-shadow: 0 5px 9px rgba(60, 20, 15, 0.3);
+    }
+
+    .torn {
+      position: relative; background: linear-gradient(135deg, #eadcc2, #dcc9a5);
+      padding: 8px 14px; color: #5c4b2f;
+    }
+    .torn::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 22% 28%, rgba(120, 80, 40, 0.10), transparent 55%),
+        radial-gradient(circle at 78% 66%, rgba(90, 60, 30, 0.12), transparent 50%);
+    }
+    .torn-clip { clip-path: polygon(0 5%, 6% 1%, 12% 6%, 18% 2%, 25% 7%, 32% 3%, 40% 8%, 47% 3%, 55% 7%, 63% 2%, 71% 6%, 79% 3%, 87% 7%, 94% 4%, 100% 7%, 99% 93%, 93% 100%, 86% 96%, 78% 99%, 70% 95%, 61% 100%, 53% 96%, 44% 99%, 35% 95%, 26% 100%, 18% 96%, 10% 99%, 3% 96%, 0 99%); }
+
+    .news-clip {
+      background: #f3efe4; border: 1px solid #d6cfba; padding: 7px 9px; width: 152px;
+      color: #5c5540; transform: rotate(2deg); font-size: 0.56rem; line-height: 1.55;
+      box-shadow: 0 4px 10px rgba(60, 74, 68, 0.15);
+    }
+    .news-head { font-family: Georgia, serif; text-align: center; font-size: 0.74rem; letter-spacing: 3px; border-bottom: 2px solid #5c5540; margin-bottom: 4px; padding-bottom: 2px; }
+    .news-cols { column-count: 2; column-gap: 8px; }
+    .news-cols p::after { content: ""; display: block; height: 1px; width: 72%; margin: 3px 0 0; background: rgba(92, 85, 64, 0.4); }
+
+    .kraft {
+      position: relative; background: linear-gradient(135deg, #d8bd92, #bfa074);
+      color: #fff8e8; font-family: "Kaiti SC", serif; font-size: 0.72rem; letter-spacing: 2px;
+      padding: 6px 13px; border-radius: 5px; box-shadow: 0 3px 8px rgba(60, 50, 30, 0.25); transform: rotate(2deg);
+    }
+    .kraft::before { content: ""; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); width: 16px; height: 10px; background: #e8d8b8; border-radius: 2px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
+
+    .lace {
+      height: 9px;
+      background:
+        linear-gradient(#f7faf6, #f7faf6) top / 100% 5px no-repeat,
+        radial-gradient(circle at 10px -1px, transparent 9px, rgba(255,255,255,0.75) 9.5px, rgba(255,255,255,0.75) 10.5px, transparent 11px);
+      background-size: 100% 5px, 20px 9px;
+    }
+
+    .date-stamp {
+      width: fit-content; border: 2px solid rgba(115, 100, 60, 0.55); color: rgba(115, 100, 60, 0.78);
+      font-family: Georgia, serif; font-size: 0.6rem; letter-spacing: 1px; padding: 2px 8px;
+      transform: rotate(-6deg); background: rgba(243, 239, 228, 0.5);
+    }
+
+    .sticker { display: inline-flex; align-items: center; gap: 6px; border-radius: 9999px; padding: 7px 14px; font-size: 0.8rem; background: rgba(168, 201, 154, 0.28); border: 1px solid rgba(168, 201, 154, 0.65); color: var(--ink-soft); transition: all 0.25s; }
+    .sticker:hover { background: var(--green-hover); border-color: var(--green-hover); color: #fff; transform: translateY(-2px); }
+    .sticky-note { display: inline-block; background: var(--honey); color: var(--ink); padding: 10px 16px; border-radius: 8px 18px 18px 12px; font-size: 0.85rem; font-weight: 500; box-shadow: 2px 4px 8px rgba(60, 74, 68, 0.08); transform: rotate(-0.8deg); transition: transform 0.15s; }
+    .sticky-note:hover { transform: rotate(0deg) scale(1.04); }
+
+    .top-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99; background: rgba(247, 250, 246, 0.7); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; gap: 8px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .nav-links a { color: var(--ink-soft); text-decoration: none; font-size: 0.82rem; padding: 6px 10px; border-radius: 9999px; transition: all 0.2s; white-space: nowrap; }
+    .nav-links a:hover { background: var(--blue); color: #fff; }
+    .icon-btn { background: var(--paper-soft); border: 1px solid var(--line); border-radius: 9999px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); transition: all 0.2s; touch-action: manipulation; }
+    .icon-btn:hover { background: var(--green-hover); border-color: var(--green-hover); color: #fff; }
+
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--blue); color: #fff; border-radius: 9999px; padding: 10px 18px; font-size: 0.9rem; font-weight: 500; text-decoration: none; cursor: pointer; border: none; box-shadow: 0 8px 18px -8px rgba(115, 166, 196, 0.5); transition: all 0.25s; touch-action: manipulation; }
+    .btn-primary:hover { background: var(--blue-hover); transform: translateY(-2px); }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1.5px solid var(--blue); color: var(--blue-hover); border-radius: 9999px; padding: 10px 18px; font-size: 0.9rem; text-decoration: none; transition: all 0.25s; cursor: pointer; touch-action: manipulation; }
+    .btn-ghost:hover { background: rgba(148, 191, 216, 0.14); color: var(--blue-hover); transform: translateY(-2px); }
+
+    .thumb {
+      position: relative; border-radius: 12px; overflow: hidden; cursor: zoom-in;
+      background: #8a6239; aspect-ratio: 4/3; border: none; transition: box-shadow 0.25s;
+      box-shadow:
+        0 0 0 2px #8a6239,
+        0 0 0 4px #a67c4e,
+        0 0 0 5px #7a5530,
+        0 0 0 8px #5f4224,
+        0 14px 26px -10px rgba(60, 40, 20, 0.45);
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s; }
+    .thumb:hover img { transform: scale(1.06); }
+    .thumb:hover {
+      box-shadow:
+        0 0 0 2px #8a6239,
+        0 0 0 4px #a67c4e,
+        0 0 0 5px #7a5530,
+        0 0 0 8px #5f4224,
+        0 18px 32px -10px rgba(60, 40, 20, 0.55),
+        0 0 0 9px rgba(148, 191, 216, 0.45);
+    }
+    .thumb .thumb-label { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, rgba(60,74,68,0.72), transparent); color: #fff; font-size: 0.72rem; padding: 18px 10px 8px; }
+    .cert-thumb { border-radius: 0.9rem; overflow: hidden; border: 1px solid var(--line); cursor: zoom-in; background: rgba(255,255,255,0.4); transition: all 0.25s; }
+    .cert-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cert-thumb:hover { border-color: var(--blue); transform: translateY(-3px); }
+
+    .back-top { position: fixed; bottom: 26px; right: 22px; z-index: 90; background: var(--blue); color: #fff; border: none; width: 46px; height: 46px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 12px 24px -10px rgba(115, 166, 196, 0.6); opacity: 0; visibility: hidden; transform: translateY(8px); transition: all 0.25s; }
+    .back-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+    #previewOverlay { position: fixed; inset: 0; z-index: 200; background: rgba(60,74,68,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+    #previewOverlay.show { display: flex; }
+    #previewOverlay img, #previewOverlay video { max-width: 86vw; max-height: 80vh; object-fit: contain; border-radius: 1.25rem; box-shadow: 0 30px 70px rgba(0,0,0,0.35); }
+
+    #toast {
+      position: fixed; left: 50%; bottom: 34px; z-index: 300; transform: translateX(-50%) translateY(20px) scale(0.9);
+      background: var(--paper-soft); border: 1px solid var(--line-deep); color: var(--ink);
+      padding: 11px 20px; border-radius: 9999px; font-size: 0.85rem;
+      opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(.22,1,.36,1);
+      box-shadow: 0 16px 40px rgba(60,74,68,0.22); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0) scale(1); }
+
+    #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 180; }
+
+    @media (max-width: 640px) { .hide-sm { display: none !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      #scrollProgress { display: none; }
+    }
+    @media print { .top-nav, .back-top, .deco, .tape, #previewOverlay, #toast, #bgmBtn, #confettiCanvas, #scrollProgress, #greetBtn { display: none !important; } body { background: #fff !important; color: #000 !important; } .bento-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; } .reveal { opacity: 1 !important; transform: none !important; } }
+  </style>
+</head>
+<body>
+
+  <div id="scrollProgress" aria-hidden="true"></div>
+
+  <nav class="top-nav" aria-label="主导航">
+    <a class="text-lg font-bold tracking-wide hand-font" style="color:var(--ink);" href="#hero">唐沛奇</a>
+    <div class="nav-links">
+      <a href="#hero">主页</a>
+      <a href="#stats">战绩</a>
+      <a href="#project">项目</a>
+      <a href="#skills">技能</a>
+      <a href="#experience">经历</a>
+      <a href="#portfolio">作品</a>
+      <a href="#certificates">证书</a>
+      <a href="#contact">联系</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="icon-btn" id="bgmBtn" aria-label="背景音乐"><i data-lucide="music"></i></button>
+      <button class="icon-btn" id="printBtn" aria-label="打印"><i data-lucide="printer"></i></button>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 md:px-6 pt-24 pb-16 relative z-[1]">
+
+    <div class="bento-grid">
+
+      <!-- ============ 核心主卡片（首屏叙事） ============ -->
+      <section id="hero" class="bento-card md:col-span-4 reveal" data-delay="0">
+        <div class="tape" style="top:-10px; left:26px;"></div>
+        <div class="deco kraft hide-sm" style="right:16px; top:14px; transform:rotate(3deg);">简历 RESUME</div>
+        <div class="deco news-clip hide-sm" style="right:12px; top:120px;">
+          <div class="news-head">晨 报 · DAILY</div>
+          <div class="news-cols">
+            <p>AI训练师双证一次通过</p>
+            <p>讯飞微调工程师新认证</p>
+          </div>
+        </div>
+        <svg class="deco hide-sm" width="110" height="110" viewBox="0 0 110 110" fill="none" stroke="#7c9a6e" stroke-width="1.6" stroke-linecap="round" opacity="0.75" style="right:4px; bottom:0;">
+          <path d="M96 100 C 88 72, 74 52, 48 38"/>
+          <path d="M76 62 C 84 58, 92 60, 96 66 C 90 70, 82 68, 76 62Z" fill="rgba(168,201,154,.25)"/>
+          <path d="M58 48 C 66 42, 74 44, 78 50 C 72 55, 63 53, 58 48Z" fill="rgba(233,211,156,.35)"/>
+          <path d="M86 76 C 92 72, 99 74, 102 79 C 97 83, 90 82, 86 76Z"/>
+          <circle cx="48" cy="38" r="3.4" fill="rgba(233,211,156,.85)" stroke="none"/>
+          <circle cx="53" cy="30" r="2.6" fill="rgba(168,201,154,.6)" stroke="none"/>
+          <path d="M50 38 q2 9 -1 15"/>
+        </svg>
+        <svg class="deco" width="86" height="86" viewBox="0 0 100 100" fill="none" stroke="#7a6a45" stroke-width="2" opacity="0.75" style="right:-4px; top:150px;">
+          <circle cx="50" cy="50" r="47"/>
+          <circle cx="50" cy="50" r="40" stroke-dasharray="5 4"/>
+          <path d="M18 66 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <path d="M18 72 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <text x="50" y="47" text-anchor="middle" font-size="13" font-family="Georgia,serif" fill="#7a6a45" stroke="none">2026</text>
+          <text x="50" y="62" text-anchor="middle" font-size="9" letter-spacing="2" font-family="Georgia,serif" fill="#7a6a45" stroke="none">达摩院</text>
+        </svg>
+        <div class="deco ticket hide-sm" style="right:14px; bottom:96px;">
+          <div style="display:flex; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-size:0.74rem; font-weight:700;">济南 → 达摩院</div>
+              <div>AI训练师 · 双证</div>
+              <div>2026.07-08 · 软卧AI</div>
+            </div>
+            <div class="barcode"></div>
+          </div>
+        </div>
+        <svg class="deco" width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#8aa08f" stroke-width="1.6" stroke-linecap="round" style="left:18px; top:86px;">
+          <path d="M17 9 a8 8 0 1 1 -8 8 a6 6 0 1 1 6 -6 a4 4 0 1 1 -4 4 a2 2 0 1 1 2 -2"/>
+        </svg>
+        <div class="bento-inner flex flex-col gap-5" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <div class="flex items-center gap-5 flex-wrap">
+            <div class="relative shrink-0">
+              <div class="tape tape-blue" style="top:-11px; left:-8px; transform:rotate(-12deg);"></div>
+              <img src="个人头像.jpg" alt="唐沛奇头像" loading="lazy"
+                   class="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover ring-2 ring-[color:var(--blue)] shadow-lg rotate-[-1.5deg]">
+            </div>
+            <div class="flex-1 min-w-[200px]">
+              <h1 class="hand-font text-5xl md:text-6xl font-bold tracking-wide" style="color:var(--ink);">唐沛奇</h1>
+              <div class="mt-1.5 h-[5px] w-24 rounded-full" style="background:linear-gradient(90deg,var(--blue),var(--green));"></div>
+              <p class="mt-3 text-base md:text-lg" style="color:var(--ink-soft);">
+                <i data-lucide="graduation-cap" class="inline-block w-4 h-4 mr-1"></i>济南大学 · 准大一 · 新能源材料与器件
+              </p>
+              <p class="mt-1 h-6 text-base md:text-lg font-medium" style="color:var(--blue-hover);">
+                我是一位 <span id="typewriter"></span><span class="type-cursor"></span>
+              </p>
+            </div>
+          </div>
+          <p class="sticky-note">「我欲穿花寻路，直入白云深处，浩气展霓虹」</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="sticker"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i>AI训练师高级</span>
+            <span class="sticker"><i data-lucide="cpu" class="w-3.5 h-3.5"></i>Prompt工程师</span>
+            <span class="sticker"><i data-lucide="bot" class="w-3.5 h-3.5"></i>智能体工程师</span>
+            <span class="sticker"><i data-lucide="zap" class="w-3.5 h-3.5"></i>执行力强</span>
+          </div>
+          <p class="text-sm md:text-[0.95rem] leading-relaxed" style="color:var(--ink-soft);">
+            业余爱好素描、手工、阅读、音乐。对 AI 领域有浓厚兴趣，具备多项 AI 认证，期待从基础岗位快速成长。
+          </p>
+          <div class="flex flex-wrap gap-3 mt-auto">
+            <a class="btn-primary" href="tel:19021699211"><i data-lucide="phone" class="w-4 h-4"></i>电话</a>
+            <button class="btn-ghost" data-copy="2998736396@qq.com" data-label="邮箱" data-confetti="true"><i data-lucide="mail" class="w-4 h-4"></i>邮箱</button>
+            <button class="btn-ghost" data-copy="wxid_27g96rcosl0a22" data-label="微信"><i data-lucide="message-circle" class="w-4 h-4"></i>微信</button>
+            <button class="btn-ghost" id="greetBtn"><i data-lucide="hand" class="w-4 h-4"></i>打招呼</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 战绩卡片 ============ -->
+      <section id="stats" class="bento-card md:col-span-2 reveal" data-delay="80">
+        <div class="tape tape-green" style="top:-10px; right:26px;"></div>
+        <svg class="deco" width="58" height="58" viewBox="0 0 58 58" fill="none" stroke="#5b7a52" stroke-width="1.6" opacity="0.7" style="right:6px; top:52px;">
+          <circle cx="29" cy="29" r="27" stroke-dasharray="1.5 3"/>
+          <circle cx="29" cy="29" r="22"/>
+          <path d="M29 42 V22 M29 34 C 24 31, 20 27, 19 21 C 25 22, 28 25, 29 28 C 30 25, 33 22, 39 21 C 38 27, 34 31, 29 34Z" fill="rgba(168,201,154,.25)"/>
+        </svg>
+        <div class="deco date-stamp" style="right:10px; bottom:14px;">2026.07.08</div>
+        <div class="bento-inner flex flex-col" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-5" style="color:var(--ink-soft);">
+            <i data-lucide="award" class="w-4 h-4" style="color:var(--green-hover);"></i>核心战绩
+          </h2>
+          <div class="grid grid-cols-2 gap-4 flex-1 content-center">
+            <div><div class="hand-font text-4xl md:text-5xl font-bold grad-text">6</div><div class="mt-1 text-xs" style="color:var(--ink-faint);">张认证证书</div></div>
+            <div><div class="hand-font text-4xl md:text-5xl font-bold grad-text">2</div><div class="mt-1 text-xs" style="color:var(--ink-faint);">AI训练师双级</div></div>
+            <div><div class="hand-font text-4xl md:text-5xl font-bold grad-text">8</div><div class="mt-1 text-xs" style="color:var(--ink-faint);">项技能栈</div></div>
+            <div><div class="hand-font text-4xl md:text-5xl font-bold grad-text">3</div><div class="mt-1 text-xs" style="color:var(--ink-faint);">项核心认证</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 主打项目卡片 ============ -->
+      <section id="project" class="bento-card md:col-span-4 reveal" data-delay="120">
+        <div class="tape tape-blue" style="top:-9px; left:40px; transform:rotate(4deg);"></div>
+        <svg class="deco" width="86" height="86" viewBox="0 0 100 100" fill="none" stroke="#7a6a45" stroke-width="2" opacity="0.7" style="left:16px; top:16px; transform:rotate(-10deg);">
+          <circle cx="50" cy="50" r="47"/>
+          <circle cx="50" cy="50" r="40" stroke-dasharray="5 4"/>
+          <path d="M18 66 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <path d="M18 72 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <text x="50" y="47" text-anchor="middle" font-size="13" font-family="Georgia,serif" fill="#7a6a45" stroke="none">已认证</text>
+          <text x="50" y="62" text-anchor="middle" font-size="9" letter-spacing="2" font-family="Georgia,serif" fill="#7a6a45" stroke="none">2026</text>
+        </svg>
+        <svg class="deco" width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#8aa08f" stroke-width="1.6" stroke-linecap="round" style="right:10px; bottom:12px;">
+          <path d="M8 12h15v8a6 6 0 0 1-6 6h-3a6 6 0 0 1-6-6v-8Z"/>
+          <path d="M23 13h2.5a3 3 0 0 1 0 6H23"/>
+          <path d="M12 5c1-1 1-2 0-3"/>
+          <path d="M17 5c1-1 1-2 0-3"/>
+        </svg>
+        <div class="bento-inner flex flex-col md:flex-row gap-5" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <div class="md:w-1/2 shrink-0">
+            <div class="rounded-2xl overflow-hidden border border-[color:var(--line)] h-full min-h-44 shadow-md relative">
+              <div class="tape" style="top:12px; left:-8px; transform:rotate(-12deg);"></div>
+              <img src="人工智能训练师（高级）-唐沛奇-20260804.jpg" alt="AI训练师高级认证" loading="lazy" class="w-full h-full object-cover">
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col gap-4">
+            <h2 class="hand-font text-xl font-bold flex items-center gap-2" style="color:var(--ink);"><i data-lucide="rocket" class="w-5 h-5" style="color:var(--blue-hover);"></i>AI 智能体实战认证</h2>
+            <p class="text-sm leading-relaxed" style="color:var(--ink-soft);">
+              基于阿里达摩院体系的 AI 训练师初/高级双认证项目，覆盖 Prompt 工程、智能体搭建与微调全流程，并进阶取得科大讯飞微调工程师认证。
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="sticker"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i>Prompt工程</span>
+              <span class="sticker"><i data-lucide="bot" class="w-3.5 h-3.5"></i>智能体搭建</span>
+              <span class="sticker"><i data-lucide="database" class="w-3.5 h-3.5"></i>RAG基础</span>
+              <span class="sticker"><i data-lucide="plug" class="w-3.5 h-3.5"></i>API对接</span>
+            </div>
+            <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs mt-auto" style="color:var(--ink-soft);">
+              <span class="flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4" style="color:var(--green-hover);"></i>初/高级双证一次通过</span>
+              <span class="flex items-center gap-1.5"><i data-lucide="badge-check" class="w-4 h-4" style="color:var(--blue-hover);"></i>科大讯飞微调工程师</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 技能聚合卡片 ============ -->
+      <section id="skills" class="bento-card md:col-span-2 reveal" data-delay="160">
+        <div class="tape tape-line" style="top:-8px; left:50%; transform:translateX(-50%) rotate(0deg); width:96px;"></div>
+        <svg class="deco" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#8aa08f" stroke-width="1.6" stroke-linecap="round" style="right:10px; bottom:44px;">
+          <path d="M10 20V6l9-2v14"/>
+          <circle cx="7.5" cy="20" r="2.6"/>
+          <circle cx="16.5" cy="18" r="2.6"/>
+        </svg>
+        <svg class="deco" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#7c9a6e" stroke-width="1.4" stroke-linecap="round" style="right:6px; top:10px;">
+          <path d="M20 6c8 6 10 14 6 22-8-4-12-12-6-22Z" fill="rgba(168,201,154,.3)"/>
+          <path d="M20 6c-4 8-2 16 6 22"/>
+        </svg>
+        <div class="bento-inner flex flex-col" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-5" style="color:var(--ink-soft);">
+            <i data-lucide="layers" class="w-4 h-4" style="color:var(--blue-hover);"></i>技能栈
+          </h2>
+          <div class="flex flex-wrap gap-2.5 content-start">
+            <span class="sticker">AI训练</span>
+            <span class="sticker">Prompt工程</span>
+            <span class="sticker">智能体搭建</span>
+            <span class="sticker">Word排版</span>
+            <span class="sticker">Excel基础</span>
+            <span class="sticker">图像编辑</span>
+            <span class="sticker">RAG基础</span>
+            <span class="sticker">API对接</span>
+          </div>
+          <p class="mt-auto pt-4 text-xs" style="color:var(--ink-faint);">从 Prompt 到微调，持续扩展全栈 AI 能力边界。</p>
+        </div>
+      </section>
+
+      <!-- ============ 经历条目卡片 ============ -->
+      <section id="experience" class="bento-card md:col-span-6 reveal" data-delay="220">
+        <div class="tape" style="top:-10px; left:50%; transform:translateX(-50%) rotate(0deg);"></div>
+        <div class="deco torn torn-clip" style="right:14px; top:16px;">
+          <div style="font-family:Georgia,serif; font-size:0.7rem; letter-spacing:2px; position:relative; z-index:1;">TIMELINE · 时间轴</div>
+        </div>
+        <svg class="deco hide-sm" width="58" height="58" viewBox="0 0 58 58" fill="none" stroke="#b09f6f" stroke-width="1.6" opacity="0.75" style="right:14px; bottom:14px;">
+          <circle cx="29" cy="29" r="27" stroke-dasharray="1.5 3"/>
+          <circle cx="29" cy="29" r="22"/>
+          <text x="29" y="26" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#b09f6f" stroke="none">讯飞</text>
+          <text x="29" y="39" text-anchor="middle" font-size="7" letter-spacing="1" font-family="Georgia,serif" fill="#b09f6f" stroke="none">微调</text>
+        </svg>
+        <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-6" style="color:var(--ink-soft);">
+            <i data-lucide="briefcase" class="w-4 h-4" style="color:var(--green-hover);"></i>经历 · 时间轴
+          </h2>
+          <div class="grid md:grid-cols-3 gap-5">
+            <div class="rounded-2xl border border-[color:var(--line)] p-5 hover:border-[color:var(--blue)] transition-colors" style="background:rgba(148,191,216,0.10);">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(148,191,216,0.25); color:var(--blue-hover);"><i data-lucide="cpu" class="w-5 h-5"></i></span>
+                <span class="text-xs px-2.5 py-1 rounded-full border" style="border-color:var(--blue); color:var(--blue-hover);">2026.08</span>
+              </div>
+              <p class="mt-3 font-semibold" style="color:var(--ink);">科大讯飞微调工程师认证</p>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--line)] p-5 hover:border-[color:var(--green)] transition-colors" style="background:rgba(168,201,154,0.12);">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(168,201,154,0.28); color:var(--green-hover);"><i data-lucide="bot" class="w-5 h-5"></i></span>
+                <span class="text-xs px-2.5 py-1 rounded-full border" style="border-color:var(--green); color:var(--green-hover);">2026.08.15</span>
+              </div>
+              <p class="mt-3 font-semibold" style="color:var(--ink);">Prompt工程师 &amp; 智能体工程师认证</p>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--line)] p-5 hover:border-[color:var(--blue)] transition-colors" style="background:rgba(233,211,156,0.12);">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(233,211,156,0.3); color:#b08f3f;"><i data-lucide="award" class="w-5 h-5"></i></span>
+                <span class="text-xs px-2.5 py-1 rounded-full border" style="border-color:#d9c078; color:#b08f3f;">2026.07-08</span>
+              </div>
+              <p class="mt-3 font-semibold" style="color:var(--ink);">阿里达摩院人工智能训练师初/高级</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 作品贴纸 ============ -->
+      <section id="portfolio" class="bento-card md:col-span-6 reveal" data-delay="280">
+        <div class="tape tape-blue" style="top:-9px; left:30px; transform:rotate(3deg);"></div>
+        <svg class="deco" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#c9a34f" stroke-width="1.5" stroke-linejoin="round" style="right:14px; top:14px;">
+          <path d="M13 4l2.5 6 6.5.5-5 4 1.5 6.5L13 17l-5.5 4L9 14.5 4 10.5l6.5-.5L13 4z"/>
+        </svg>
+        <div class="deco date-stamp hide-sm" style="right:16px; bottom:16px; transform:rotate(4deg);">已盖章 · 手作</div>
+        <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-6" style="color:var(--ink-soft);">
+            <i data-lucide="palette" class="w-4 h-4" style="color:var(--blue-hover);"></i>作品贴纸
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="thumb" data-preview="小红书主页.jpg" data-type="image"><img src="小红书主页.jpg" alt="小红书主页" loading="lazy"><span class="thumb-label">小红书主页</span></div>
+            <div class="thumb" data-preview="骷髅头.jpg" data-type="image"><img src="骷髅头.jpg" alt="素描骷髅" loading="lazy"><span class="thumb-label">素描骷髅</span></div>
+            <div class="thumb" data-preview="马克吐温.jpg" data-type="image"><img src="马克吐温.jpg" alt="马克吐温" loading="lazy"><span class="thumb-label">马克吐温</span></div>
+            <div class="thumb" data-preview="台灯.jpg" data-type="image"><img src="台灯.jpg" alt="素描台灯" loading="lazy"><span class="thumb-label">素描台灯</span></div>
+            <div class="thumb" data-preview="小卫.jpg" data-type="image"><img src="小卫.jpg" alt="小卫石膏" loading="lazy"><span class="thumb-label">小卫石膏</span></div>
+            <div class="thumb" data-preview="石膏.jpg" data-type="image"><img src="石膏.jpg" alt="石膏像" loading="lazy"><span class="thumb-label">石膏像</span></div>
+            <div class="thumb !aspect-video" data-preview="手工.mp4" data-type="video">
+              <img src="首页.jpg" alt="手工视频封面" loading="lazy">
+              <span class="absolute inset-0 flex items-center justify-center"><i data-lucide="play" class="w-9 h-9 text-white/90 drop-shadow-lg"></i></span>
+              <span class="thumb-label">手工视频</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 证书展示 ============ -->
+      <section id="certificates" class="bento-card md:col-span-6 reveal" data-delay="340">
+        <div class="tape tape-dot" style="top:-9px; left:45%; transform:translateX(-50%) rotate(0deg); width:96px;"></div>
+        <div class="deco stamp hide-sm" style="right:14px; top:10px;">
+          <img class="stamp-img" src="人工智能训练师（初级）-唐沛奇-20260727.jpg" alt="邮票·认证证书">
+          <div class="stamp-tag">中国 · AI大学</div>
+        </div>
+        <div class="deco kraft" style="right:18px; bottom:14px; transform:rotate(-2deg);">证书 CERTIFICATE ×6</div>
+        <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-6" style="color:var(--ink-soft);">
+            <i data-lucide="file-badge" class="w-4 h-4" style="color:var(--green-hover);"></i>证书展示
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            <div class="cert-thumb aspect-[3/4]" data-preview="人工智能训练师（初级）-唐沛奇-20260727.jpg" data-type="image"><img src="人工智能训练师（初级）-唐沛奇-20260727.jpg" alt="AI初级" loading="lazy"></div>
+            <div class="cert-thumb aspect-[3/4]" data-preview="人工智能训练师（高级）-唐沛奇-20260804.jpg" data-type="image"><img src="人工智能训练师（高级）-唐沛奇-20260804.jpg" alt="AI高级" loading="lazy"></div>
+            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书.png" data-type="image"><img src="Ai大学认证证书.png" alt="AI大学1" loading="lazy"></div>
+            <div class="cert-thumb aspect-[3/4]" data-preview=" Ai大学认证证书 (1).png" data-type="image"><img src=" Ai大学认证证书 (1).png" alt="AI大学2" loading="lazy"></div>
+            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书(2).png" data-type="image"><img src="Ai大学认证证书(2).png" alt="AI大学3" loading="lazy"></div>
+            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书（3）.png" data-type="image"><img src="Ai大学认证证书（3）.png" alt="AI大学4" loading="lazy"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 联系（信封页） ============ -->
+      <section id="contact" class="bento-card md:col-span-6 reveal" data-delay="400">
+        <div class="tape tape-green" style="top:-10px; right:40px; transform:rotate(-4deg);"></div>
+        <div class="deco lace" style="top:0; left:18px; right:18px;"></div>
+        <div class="deco wax" style="right:26px; bottom:20px; transform:rotate(8deg);"></div>
+        <svg class="deco" width="86" height="86" viewBox="0 0 100 100" fill="none" stroke="#7a6a45" stroke-width="2" opacity="0.7" style="left:8px; bottom:10px;">
+          <circle cx="50" cy="50" r="47"/>
+          <circle cx="50" cy="50" r="40" stroke-dasharray="5 4"/>
+          <path d="M18 66 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <path d="M18 72 q5 -6 10 0 t10 0 t10 0 t10 0 t10 0 t10 0" stroke-width="1.4"/>
+          <text x="50" y="47" text-anchor="middle" font-size="12" font-family="Georgia,serif" fill="#7a6a45" stroke="none">来信请寄</text>
+          <text x="50" y="62" text-anchor="middle" font-size="9" letter-spacing="1" font-family="Georgia,serif" fill="#7a6a45" stroke="none">娄底</text>
+        </svg>
+        <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
+          <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-4" style="color:var(--ink-soft);">
+            <i data-lucide="send" class="w-4 h-4" style="color:var(--blue-hover);"></i>联系留言
+          </h2>
+          <p class="flex items-center gap-2 text-sm mb-5" style="color:var(--ink-soft);">
+            <i data-lucide="map-pin" class="w-4 h-4" style="color:var(--green-hover);"></i>湖南省娄底市 · 欢迎随时联系～
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a class="btn-primary" href="mailto:2998736396@qq.com"><i data-lucide="mail" class="w-4 h-4"></i>发送邮件</a>
+            <a class="btn-ghost" href="tel:19021699211"><i data-lucide="phone" class="w-4 h-4"></i>190-2169-9211</a>
+            <button class="btn-ghost" data-copy="2998736396@qq.com" data-label="邮箱" data-confetti="true"><i data-lucide="copy" class="w-4 h-4"></i>复制邮箱</button>
+            <button class="btn-ghost" data-copy="wxid_27g96rcosl0a22" data-label="微信"><i data-lucide="message-circle" class="w-4 h-4"></i>复制微信</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="text-center text-xs pt-10 pb-4" style="color:var(--ink-faint);">
+      <span>© 2026 唐沛奇 · 更新于 2026 年 8 月 · 手账纪念版 ✎</span>
+    </footer>
+  </main>
+
+  <button class="back-top" id="backTop" aria-label="返回顶部"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
+
+  <div id="previewOverlay" role="dialog" aria-label="预览"></div>
+  <div id="toast"></div>
+  <canvas id="confettiCanvas"></canvas>
+
+  <audio id="bgm" loop preload="none" src="清水準一 - Bloom of Youth (风华正茂).mp3"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
+  <script>
+    (function () {
+      if (window.lucide) lucide.createIcons();
+
+      const $ = s => document.querySelector(s);
+      const $$ = s => document.querySelectorAll(s);
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches || 'ontouchstart' in window;
+
+      /* ---------- 顶部滚动进度条（transform 驱动，无重排） ---------- */
+      const progress = $('#scrollProgress');
+      function updateProgress() {
+        const h = document.documentElement;
+        const max = h.scrollHeight - h.clientHeight;
+        progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(h.scrollTop / max, 1) : 0) + ')';
+      }
+      window.addEventListener('scroll', updateProgress, { passive: true });
+      window.addEventListener('resize', updateProgress, { passive: true });
+      updateProgress();
+
+      /* ---------- 打字机叙事 ---------- */
+      const words = ['数据分析探索者', '全栈开发学习者', 'AI应用实践者'];
+      const typeEl = $('#typewriter');
+      let wi = 0, ci = 0, deleting = false;
+      function tick() {
+        const word = words[wi];
+        typeEl.textContent = word.slice(0, ci);
+        let delay = deleting ? 42 : 95;
+        if (!deleting && ci === word.length) { delay = 1700; deleting = true; }
+        else if (deleting && ci === 0) { deleting = false; wi = (wi + 1) % words.length; delay = 380; }
+        else { ci += deleting ? -1 : 1; }
+        setTimeout(tick, delay);
+      }
+      if (!reduced) tick(); else typeEl.textContent = words[0];
+
+      /* ---------- 滚动渐入（IntersectionObserver，降级安全） ---------- */
+      const reveals = $$('.reveal');
+      reveals.forEach(el => el.style.transitionDelay = (el.dataset.delay || 0) + 'ms');
+      if ('IntersectionObserver' in window && !reduced) {
+        reveals.forEach(el => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(30px)';
+        });
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              const el = e.target;
+              el.classList.add('is-in');
+              el.style.opacity = '';
+              el.style.transform = '';
+              io.unobserve(el);
+              setTimeout(() => { el.style.transitionDelay = '0ms'; }, (parseFloat(el.dataset.delay || 0)) + 800);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        reveals.forEach(el => io.observe(el));
+      } else {
+        reveals.forEach(el => el.classList.add('is-in'));
+      }
+
+      /* ---------- Canvas 彩带粒子 ---------- */
+      const canvas = $('#confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      let parts = [], rafId = null, dpr = 1;
+      function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas, { passive: true });
+      const CONFETTI_COLORS = ['#94BFD8', '#A8C99A', '#E9D39C', '#73A6C4', '#8BB47A', '#22d3ee', '#34d399', '#fbbf24', '#a78bfa'];
+      function spawnConfetti(x, y, n) {
+        for (let i = 0; i < n; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 3 + Math.random() * 6;
+          parts.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 4.5,
+            size: 4 + Math.random() * 6,
+            color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.32,
+            life: 1,
+            decay: 0.012 + Math.random() * 0.012
+          });
+        }
+        if (!rafId) requestConfetti();
+      }
+      function requestConfetti() {
+        rafId = requestAnimationFrame(confettiLoop);
+      }
+      function confettiLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        parts.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.18; p.vx *= 0.99;
+          p.rot += p.vr; p.life -= p.decay;
+        });
+        parts = parts.filter(p => p.life > 0);
+        parts.forEach(p => {
+          ctx.globalAlpha = Math.max(p.life, 0);
+          ctx.fillStyle = p.color;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.scale(1, Math.abs(Math.sin(p.rot * 2)) * 0.7 + 0.3);
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        });
+        ctx.globalAlpha = 1;
+        if (parts.length) { rafId = requestAnimationFrame(confettiLoop); }
+        else { rafId = null; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+      }
+      if (reduced) { spawnConfetti = function () {}; }
+
+      /* ---------- 气泡反馈 ---------- */
+      let toastTimer;
+      function toast(msg) {
+        const t = $('#toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 1700);
+      }
+
+      /* ---------- 复制 + 彩带 ---------- */
+      function copyText(text, label, ev) {
+        if (ev) spawnConfetti(ev.clientX, ev.clientY, 70);
+        const done = () => toast('🎉 已复制 ' + label + '：' + text);
+        const fallback = () => { const v = prompt('复制失败，请手动复制', text); if (v !== null) done(); };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done).catch(fallback);
+        } else { fallback(); }
+      }
+      $$('[data-copy]').forEach(btn => btn.addEventListener('click', e => copyText(btn.getAttribute('data-copy'), btn.getAttribute('data-label'), btn.hasAttribute('data-confetti') ? e : null)));
+
+      /* ---------- 打招呼 ---------- */
+      const greetBtn = $('#greetBtn');
+      const GREETINGS = ['嗨！很高兴认识你 👋', '谢谢来访～', '愿你今天也元气满满 ✨', '一起探索 AI 世界吧 🚀', '给未来的同行一个微笑 😊'];
+      greetBtn.addEventListener('click', e => {
+        spawnConfetti(e.clientX, e.clientY, 110);
+        toast(GREETINGS[(Math.random() * GREETINGS.length) | 0]);
+      });
+
+      /* ---------- 3D Tilt + 移动端降级 ---------- */
+      if (isTouch) {
+        $$('[data-tilt]').forEach(el => el.removeAttribute('data-tilt'));
+      } else if (window.VanillaTilt) {
+        VanillaTilt.init($$('[data-tilt]'), { max: 6, speed: 400, glare: true, 'max-glare': 0.12 });
+      }
+
+      /* ---------- 打印 ---------- */
+      $('#printBtn').addEventListener('click', () => window.print());
+
+      /* ---------- 图片/视频预览 ---------- */
+      const overlay = $('#previewOverlay');
+      function openPreview(src, type) {
+        overlay.innerHTML = '';
+        if (type === 'video') {
+          const v = document.createElement('video');
+          v.src = src; v.controls = true; v.autoplay = true;
+          overlay.appendChild(v);
+        } else {
+          const im = document.createElement('img');
+          im.src = src; im.alt = '预览';
+          overlay.appendChild(im);
+        }
+        overlay.classList.add('show');
+      }
+      $$('[data-preview]').forEach(el => el.addEventListener('click', () => openPreview(el.getAttribute('data-preview'), el.getAttribute('data-type'))));
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+
+      /* ---------- 返回顶部 ---------- */
+      const backTop = $('#backTop');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 400) backTop.classList.add('show');
+        else backTop.classList.remove('show');
+      }, { passive: true });
+      backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      /* ---------- BGM ---------- */
+      const bgm = $('#bgm');
+      const bgmBtn = $('#bgmBtn');
+      let playing = false;
+      function toggleBgm() {
+        if (playing) { bgm.pause(); }
+        else { bgm.volume = 0.15; bgm.play().catch(() => {}); }
+        playing = !playing;
+        bgmBtn.querySelector('i').setAttribute('data-lucide', playing ? 'music' : 'music-off');
+        if (window.lucide) lucide.createIcons();
+      }
+      bgmBtn.addEventListener('click', toggleBgm);
+      document.addEventListener('click', function firstInteraction() {
+        if (!playing) { bgm.volume = 0.15; bgm.play().catch(() => {}); playing = true; }
+        document.removeEventListener('click', firstInteraction);
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>
