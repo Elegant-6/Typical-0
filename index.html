@@ -1076,7 +1076,7 @@
           p.dur = over ? 600 + Math.random() * 300          // 前景掠过更快消散
                        : 800 + Math.random() * 400;          // 0.8–1.2s 淡出
           p.a0 = 0.35 + Math.random() * 0.27;                // 0.35–0.62，清晰可见
-          p.size = useClover ? 20 + Math.random() * 16 : 16 + Math.random() * 10;   // 原尺寸两倍
+          p.size = 28 + Math.random() * 16;                  // 与点击特效同尺寸（28–44px）
           p.spr = useClover ? CLOVER_MINI[(Math.random() * CLOVER_MINI.length) | 0]
                             : GLOW[(Math.random() * GLOW.length) | 0];
           p.rise = 10 + Math.random() * 15;                  // 上飘 10–25px
