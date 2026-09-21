@@ -34,7 +34,13 @@
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
+      /* 纸飞机自定义光标（热点=机头尖端，位于左上角） */
+      cursor: url('纸飞机.png') 2 2, auto;
     }
+    /* 文本区恢复标准光标，保证可选中可输入 */
+    p, h1, h2, h3, h4, h5, li, td, th, blockquote, input, textarea { cursor: auto; }
+    /* 交互元素同样使用纸飞机，保留 pointer 语义回退（覆盖各类按钮自带的 cursor:pointer） */
+    a, button, select, label, .icon-btn, .btn-primary, .btn-ghost, .back-top, .greet-chip { cursor: url('纸飞机.png') 2 2, pointer; }
     body::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
@@ -263,17 +269,64 @@
 
     #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 180; }
 
-    @media (max-width: 640px) { .hide-sm { display: none !important; } }
+    /* ---------- 幸运四叶草背景漂浮层（z-index:0，始终垫在主体 z-[1] 之下，不遮挡内容） ---------- */
+    #cloverBg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ---------- 指尖四叶草特效层 ×2（穿插设计）----------
+       #pointerFx      垫在内容之下：多数粒子，透过半透明卡片隐约可见
+       #pointerFxOver  罩在内容之上：少量粒子短暂掠过，低透明度快消散 */
+    #pointerFx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    #pointerFxOver { position: fixed; inset: 0; z-index: 172; pointer-events: none; }
+
+    /* ---------- 作品 3D 立方体展台（左，突出主体） ---------- */
+    .portfolio-stage { display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
+    .cube-wrap { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-left: calc(28% - 132px); }
+    .cube-scene { --cube: 264px; width: var(--cube); height: var(--cube); perspective: 1050px; touch-action: pan-y; cursor: grab; }
+    .cube-scene:active { cursor: grabbing; }
+    #artCube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; will-change: transform; }
+    .cube-face { position: absolute; inset: 0; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line-deep); box-shadow: inset 0 0 0 3px rgba(247, 250, 246, 0.65); }
+    .cube-face img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .cube-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 8px 6px; font-size: 0.68rem; letter-spacing: 1px; text-align: center; color: #fff; background: linear-gradient(to top, rgba(60, 74, 68, 0.75), transparent); }
+    .cube-face.front  { transform: rotateY(0deg)   translateZ(calc(var(--cube) / 2)); }
+    .cube-face.right  { transform: rotateY(90deg)  translateZ(calc(var(--cube) / 2)); }
+    .cube-face.back   { transform: rotateY(180deg) translateZ(calc(var(--cube) / 2)); }
+    .cube-face.left   { transform: rotateY(-90deg) translateZ(calc(var(--cube) / 2)); }
+    .cube-face.top    { transform: rotateX(90deg)  translateZ(calc(var(--cube) / 2)); }
+    .cube-face.bottom { transform: rotateX(-90deg) translateZ(calc(var(--cube) / 2)); }
+    .cube-hint { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--ink-faint); }
+
+    /* ---------- 手工视频面板（右，窄幅衬托） ---------- */
+    .video-panel { flex: 0 1 280px; min-width: 210px; display: flex; flex-direction: column; gap: 10px; margin-right: calc(33.333% - 140px); }
+    .handcraft-video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #101410; border: 1px solid var(--line-deep); border-radius: 1rem; box-shadow: 0 16px 32px -16px rgba(60, 74, 68, 0.45); }
+    .video-caption { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--ink-soft); }
+
+    /* ---------- 证书电影胶片（自动滚动） ---------- */
+    .filmstrip { position: relative; background: linear-gradient(180deg, #242a24, #181d18); border-radius: 1.1rem; padding: 6px 0; box-shadow: 0 16px 34px -18px rgba(20, 30, 22, 0.6), inset 0 0 0 1px rgba(247, 250, 246, 0.08); }
+    .film-holes { height: 12px; margin: 3px 14px; background-image: radial-gradient(4px 3px at 11px 6px, rgba(247, 250, 246, 0.85) 55%, transparent 62%); background-size: 22px 12px; background-repeat: repeat-x; }
+    .film-window { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+    .film-track { display: flex; width: max-content; animation: filmScroll 30s linear infinite; }
+    .filmstrip:hover .film-track { animation-play-state: paused; }
+    @keyframes filmScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .film-set { display: flex; gap: 14px; padding: 8px 7px; }
+    .film-frame { position: relative; flex: 0 0 auto; width: 164px; aspect-ratio: 3 / 4; border-radius: 7px; overflow: hidden; border: 1px solid rgba(247, 250, 246, 0.22); background: #0e120e; cursor: zoom-in; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.5); }
+    .film-frame img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.05); transition: transform 0.3s, filter 0.3s; }
+    .film-frame:hover img { transform: scale(1.07); filter: brightness(1.12); }
+    .film-no { position: absolute; top: 5px; left: 5px; font-family: Georgia, serif; font-size: 0.56rem; letter-spacing: 1px; color: rgba(247, 250, 246, 0.85); background: rgba(0, 0, 0, 0.5); padding: 1px 6px; border-radius: 999px; }
+
+    @media (max-width: 1050px) { .portfolio-stage { justify-content: center; } .cube-wrap { margin-left: 0; } .video-panel { margin-right: 0; } }
+    @media (max-width: 640px) { .hide-sm { display: none !important; } .cube-scene { --cube: 172px; } .film-frame { width: 128px; } .film-set { gap: 10px; padding: 6px 5px; } }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
       #scrollProgress { display: none; }
     }
-    @media print { .top-nav, .back-top, .deco, .tape, #previewOverlay, #toast, #bgmBtn, #confettiCanvas, #scrollProgress, #greetBtn { display: none !important; } body { background: #fff !important; color: #000 !important; } .bento-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; } .reveal { opacity: 1 !important; transform: none !important; } }
+    @media print { .top-nav, .back-top, .deco, .tape, #previewOverlay, #toast, #bgmBtn, #confettiCanvas, #cloverBg, #pointerFx, #pointerFxOver, #scrollProgress, #greetBtn { display: none !important; } body { background: #fff !important; color: #000 !important; } .bento-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; } .reveal { opacity: 1 !important; transform: none !important; } }
   </style>
 </head>
 <body>
 
   <div id="scrollProgress" aria-hidden="true"></div>
+  <canvas id="cloverBg" aria-hidden="true"></canvas>
+  <canvas id="pointerFx" aria-hidden="true"></canvas>
 
   <nav class="top-nav" aria-label="主导航">
     <a class="text-lg font-bold tracking-wide hand-font" style="color:var(--ink);" href="#hero">唐沛奇</a>
@@ -521,19 +574,25 @@
         <div class="deco date-stamp hide-sm" style="right:16px; bottom:16px; transform:rotate(4deg);">已盖章 · 手作</div>
         <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
           <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-6" style="color:var(--ink-soft);">
-            <i data-lucide="palette" class="w-4 h-4" style="color:var(--blue-hover);"></i>作品贴纸
+            <i data-lucide="box" class="w-4 h-4" style="color:var(--blue-hover);"></i>作品 3D 展台 · 360° 旋转
           </h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            <div class="thumb" data-preview="小红书主页.jpg" data-type="image"><img src="小红书主页.jpg" alt="小红书主页" loading="lazy"><span class="thumb-label">小红书主页</span></div>
-            <div class="thumb" data-preview="骷髅头.jpg" data-type="image"><img src="骷髅头.jpg" alt="素描骷髅" loading="lazy"><span class="thumb-label">素描骷髅</span></div>
-            <div class="thumb" data-preview="马克吐温.jpg" data-type="image"><img src="马克吐温.jpg" alt="马克吐温" loading="lazy"><span class="thumb-label">马克吐温</span></div>
-            <div class="thumb" data-preview="台灯.jpg" data-type="image"><img src="台灯.jpg" alt="素描台灯" loading="lazy"><span class="thumb-label">素描台灯</span></div>
-            <div class="thumb" data-preview="小卫.jpg" data-type="image"><img src="小卫.jpg" alt="小卫石膏" loading="lazy"><span class="thumb-label">小卫石膏</span></div>
-            <div class="thumb" data-preview="石膏.jpg" data-type="image"><img src="石膏.jpg" alt="石膏像" loading="lazy"><span class="thumb-label">石膏像</span></div>
-            <div class="thumb !aspect-video" data-preview="手工.mp4" data-type="video">
-              <img src="首页.jpg" alt="手工视频封面" loading="lazy">
-              <span class="absolute inset-0 flex items-center justify-center"><i data-lucide="play" class="w-9 h-9 text-white/90 drop-shadow-lg"></i></span>
-              <span class="thumb-label">手工视频</span>
+          <div class="portfolio-stage">
+            <div class="cube-wrap">
+              <div class="cube-scene" id="cubeScene">
+                <div id="artCube" aria-label="作品立方体">
+                  <div class="cube-face front" data-preview="小红书主页.jpg" data-type="image"><img src="小红书主页.jpg" alt="小红书主页" loading="lazy" draggable="false"><span class="cube-label">小红书主页</span></div>
+                  <div class="cube-face right" data-preview="骷髅头.jpg" data-type="image"><img src="骷髅头.jpg" alt="素描骷髅" loading="lazy" draggable="false"><span class="cube-label">素描骷髅</span></div>
+                  <div class="cube-face back" data-preview="马克吐温.jpg" data-type="image"><img src="马克吐温.jpg" alt="马克吐温" loading="lazy" draggable="false"><span class="cube-label">马克吐温</span></div>
+                  <div class="cube-face left" data-preview="台灯.jpg" data-type="image"><img src="台灯.jpg" alt="素描台灯" loading="lazy" draggable="false"><span class="cube-label">素描台灯</span></div>
+                  <div class="cube-face top" data-preview="小卫.jpg" data-type="image"><img src="小卫.jpg" alt="小卫石膏" loading="lazy" draggable="false"><span class="cube-label">小卫石膏</span></div>
+                  <div class="cube-face bottom" data-preview="石膏.jpg" data-type="image"><img src="石膏.jpg" alt="石膏像" loading="lazy" draggable="false"><span class="cube-label">石膏像</span></div>
+                </div>
+              </div>
+              <div class="cube-hint"><i data-lucide="rotate-3d" class="w-3.5 h-3.5"></i>拖拽旋转 360° · 点击放大</div>
+            </div>
+            <div class="video-panel">
+              <video class="handcraft-video" controls preload="none" playsinline poster="首页.jpg" src="手工.mp4"></video>
+              <div class="video-caption"><i data-lucide="clapperboard" class="w-4 h-4" style="color:var(--blue-hover);"></i>手工视频 · 素描手作全过程</div>
             </div>
           </div>
         </div>
@@ -549,16 +608,33 @@
         <div class="deco kraft" style="right:18px; bottom:14px; transform:rotate(-2deg);">证书 CERTIFICATE ×6</div>
         <div class="bento-inner" data-tilt data-tilt-max="6" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.12">
           <h2 class="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest mb-6" style="color:var(--ink-soft);">
-            <i data-lucide="file-badge" class="w-4 h-4" style="color:var(--green-hover);"></i>证书展示
+            <i data-lucide="film" class="w-4 h-4" style="color:var(--green-hover);"></i>证书胶片 · 放映中
           </h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            <div class="cert-thumb aspect-[3/4]" data-preview="人工智能训练师（初级）-唐沛奇-20260727.jpg" data-type="image"><img src="人工智能训练师（初级）-唐沛奇-20260727.jpg" alt="AI初级" loading="lazy"></div>
-            <div class="cert-thumb aspect-[3/4]" data-preview="人工智能训练师（高级）-唐沛奇-20260804.jpg" data-type="image"><img src="人工智能训练师（高级）-唐沛奇-20260804.jpg" alt="AI高级" loading="lazy"></div>
-            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书.png" data-type="image"><img src="Ai大学认证证书.png" alt="AI大学1" loading="lazy"></div>
-            <div class="cert-thumb aspect-[3/4]" data-preview=" Ai大学认证证书 (1).png" data-type="image"><img src=" Ai大学认证证书 (1).png" alt="AI大学2" loading="lazy"></div>
-            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书(2).png" data-type="image"><img src="Ai大学认证证书(2).png" alt="AI大学3" loading="lazy"></div>
-            <div class="cert-thumb aspect-[3/4]" data-preview="Ai大学认证证书（3）.png" data-type="image"><img src="Ai大学认证证书（3）.png" alt="AI大学4" loading="lazy"></div>
+          <div class="filmstrip" aria-label="证书胶片滚动展示">
+            <div class="film-holes" aria-hidden="true"></div>
+            <div class="film-window">
+              <div class="film-track">
+                <div class="film-set">
+                  <div class="film-frame" data-preview="人工智能训练师（初级）-唐沛奇-20260727.jpg" data-type="image"><img src="人工智能训练师（初级）-唐沛奇-20260727.jpg" alt="AI训练师初级" loading="lazy"><span class="film-no">01</span></div>
+                  <div class="film-frame" data-preview="人工智能训练师（高级）-唐沛奇-20260804.jpg" data-type="image"><img src="人工智能训练师（高级）-唐沛奇-20260804.jpg" alt="AI训练师高级" loading="lazy"><span class="film-no">02</span></div>
+                  <div class="film-frame" data-preview="Ai大学认证证书.png" data-type="image"><img src="Ai大学认证证书.png" alt="AI大学认证1" loading="lazy"><span class="film-no">03</span></div>
+                  <div class="film-frame" data-preview=" Ai大学认证证书 (1).png" data-type="image"><img src=" Ai大学认证证书 (1).png" alt="AI大学认证2" loading="lazy"><span class="film-no">04</span></div>
+                  <div class="film-frame" data-preview="Ai大学认证证书(2).png" data-type="image"><img src="Ai大学认证证书(2).png" alt="AI大学认证3" loading="lazy"><span class="film-no">05</span></div>
+                  <div class="film-frame" data-preview="Ai大学认证证书（3）.png" data-type="image"><img src="Ai大学认证证书（3）.png" alt="AI大学认证4" loading="lazy"><span class="film-no">06</span></div>
+                </div>
+                <div class="film-set" aria-hidden="true">
+                  <div class="film-frame"><img src="人工智能训练师（初级）-唐沛奇-20260727.jpg" alt="" loading="lazy"></div>
+                  <div class="film-frame"><img src="人工智能训练师（高级）-唐沛奇-20260804.jpg" alt="" loading="lazy"></div>
+                  <div class="film-frame"><img src="Ai大学认证证书.png" alt="" loading="lazy"></div>
+                  <div class="film-frame"><img src=" Ai大学认证证书 (1).png" alt="" loading="lazy"></div>
+                  <div class="film-frame"><img src="Ai大学认证证书(2).png" alt="" loading="lazy"></div>
+                  <div class="film-frame"><img src="Ai大学认证证书（3）.png" alt="" loading="lazy"></div>
+                </div>
+              </div>
+            </div>
+            <div class="film-holes" aria-hidden="true"></div>
           </div>
+          <p class="mt-3 text-xs" style="color:var(--ink-faint);">胶片自动放映 · 悬停暂停 · 点击画面可放大查看</p>
         </div>
       </section>
 
@@ -603,6 +679,7 @@
   <div id="previewOverlay" role="dialog" aria-label="预览"></div>
   <div id="toast"></div>
   <canvas id="confettiCanvas"></canvas>
+  <canvas id="pointerFxOver" aria-hidden="true"></canvas>
 
   <audio id="bgm" loop preload="none" src="清水準一 - Bloom of Youth (风华正茂).mp3"></audio>
 
@@ -724,6 +801,412 @@
         else { rafId = null; ctx.clearRect(0, 0, canvas.width, canvas.height); }
       }
       if (reduced) { spawnConfetti = function () {}; }
+
+      /* ---------- 幸运四叶草 · 背景漂浮层（Canvas，位于主体之下） ---------- */
+      (function initCloverBg() {
+        const bg = $('#cloverBg');
+        if (!bg || !bg.getContext) return;
+        const bctx = bg.getContext('2d');
+        let bdpr = 1, bw = 0, bh = 0;
+
+        function sizeBg() {
+          bdpr = Math.min(window.devicePixelRatio || 1, 2);
+          bw = window.innerWidth; bh = window.innerHeight;
+          bg.width = Math.round(bw * bdpr);
+          bg.height = Math.round(bh * bdpr);
+          bctx.setTransform(bdpr, 0, 0, bdpr, 0, 0);
+        }
+        sizeBg();
+
+        /* 加载抠好的透明素材：幸运四叶草/clover/clover1~11.png */
+        const SPRITES = [];
+        for (let i = 1; i <= 11; i++) {
+          const im = new Image();
+          im.src = encodeURI('幸运四叶草/clover/clover' + i + '.png');
+          SPRITES.push(im);
+        }
+        const readyImgs = () => SPRITES.filter(im => im.complete && im.naturalWidth > 0);
+        const rand = (a, b) => a + Math.random() * (b - a);
+
+        /* 三层景深：远（小而淡而慢）/ 中 / 近（大而清晰而快）；整体低透明度，绝不抢主体 */
+        const COUNT = reduced ? 8 : (window.innerWidth < 640 ? 12 : 24);
+        const leaves = [];
+        function makeLeaf(initial) {
+          const tier = Math.random();
+          const far = tier < 0.45, near = tier > 0.86;
+          return {
+            img: null,
+            x: rand(-50, bw + 50),
+            y: initial ? rand(-80, bh + 40) : bh + rand(30, 160),
+            vy: far ? rand(0.10, 0.24) : near ? rand(0.38, 0.62) : rand(0.22, 0.42),
+            amp: rand(22, 86),                       // 左右摇摆幅度
+            freq: rand(0.0004, 0.0010),              // 摇摆频率
+            phase: rand(0, Math.PI * 2),
+            rot0: rand(0, Math.PI * 2),
+            spin: Math.random() < 0.35 ? rand(0.0012, 0.0032) * (Math.random() < 0.5 ? -1 : 1) : 0,
+            rock: rand(0.10, 0.40),                  // 不整圈旋转的叶片轻微晃动
+            rockF: rand(0.0006, 0.0014),
+            scale: far ? rand(0.15, 0.27) : near ? rand(0.46, 0.62) : rand(0.28, 0.45),
+            alpha: far ? rand(0.22, 0.36) : near ? rand(0.50, 0.65) : rand(0.38, 0.55),
+            twF: rand(0.0007, 0.0016),               // 呼吸闪烁
+            twP: rand(0, Math.PI * 2)
+          };
+        }
+        function pickImg(leaf) {
+          const r = readyImgs();
+          if (r.length) leaf.img = r[(Math.random() * r.length) | 0];
+        }
+        for (let i = 0; i < COUNT; i++) leaves.push(makeLeaf(true));
+
+        /* 鼠标视差：叶片随光标轻微漂移（近景移动更多） */
+        let mx = 0.5, my = 0.5, offX = 0, offY = 0;
+        window.addEventListener('pointermove', e => {
+          mx = e.clientX / Math.max(bw, 1);
+          my = e.clientY / Math.max(bh, 1);
+        }, { passive: true });
+
+        function drawLeaf(l, now) {
+          if (!l.img) return;
+          const sway = Math.sin(now * l.freq + l.phase) * l.amp;
+          const depth = l.scale * 2.2;
+          const x = l.x + sway + offX * depth;
+          const y = l.y + offY * depth;
+          const rot = l.rot0 + l.spin * now + Math.sin(now * l.rockF + l.phase) * l.rock;
+          const tw = 0.78 + 0.22 * Math.sin(now * l.twF + l.twP);
+          const w = l.img.width * l.scale, h = l.img.height * l.scale;
+          bctx.globalAlpha = Math.min(l.alpha * tw, 0.72);
+          bctx.save();
+          bctx.translate(x, y);
+          bctx.rotate(rot);
+          bctx.drawImage(l.img, -w / 2, -h / 2, w, h);
+          bctx.restore();
+        }
+
+        let started = false, rafId = null;
+        function frame(now) {
+          bctx.clearRect(0, 0, bw, bh);
+          offX += ((mx - 0.5) * 26 - offX) * 0.04;
+          offY += ((my - 0.5) * 18 - offY) * 0.04;
+          for (const l of leaves) {
+            if (!l.img) { pickImg(l); if (!l.img) continue; }
+            l.y -= l.vy;
+            if (l.y < -l.img.height * l.scale - 40) {           // 飘出顶部 -> 底部重生
+              const nl = makeLeaf(false);
+              Object.keys(nl).forEach(k => { l[k] = nl[k]; });
+              pickImg(l);
+              continue;
+            }
+            drawLeaf(l, now);
+          }
+          bctx.globalAlpha = 1;
+          rafId = requestAnimationFrame(frame);
+        }
+
+        /* 减少动态偏好：只渲染一帧静态画面 */
+        function drawStatic() {
+          bctx.clearRect(0, 0, bw, bh);
+          leaves.forEach(l => {
+            pickImg(l);
+            if (l.img) {
+              l.rot0 = l.phase;
+              drawLeaf(l, 0);
+            }
+          });
+          bctx.globalAlpha = 1;
+        }
+
+        function tryStart() {
+          if (started || !readyImgs().length) return;
+          started = true;
+          leaves.forEach(l => { pickImg(l); l.rot0 = rand(0, Math.PI * 2); });
+          if (reduced) { drawStatic(); return; }
+          rafId = requestAnimationFrame(frame);
+        }
+        SPRITES.forEach(im => { im.onload = tryStart; im.onerror = () => {}; });
+        setTimeout(tryStart, 500);   // 缓存命中兜底
+        const waitTimer = setInterval(() => { if (started) clearInterval(waitTimer); else tryStart(); }, 800);
+        setTimeout(() => clearInterval(waitTimer), 8000);
+
+        /* 尺寸变化：重设画布并把叶片收回屏幕范围 */
+        window.addEventListener('resize', () => {
+          sizeBg();
+          leaves.forEach(l => { l.x = Math.max(-50, Math.min(bw + 50, l.x)); });
+          if (started && reduced) drawStatic();
+        }, { passive: true });
+
+        /* 标签页隐藏时暂停，省电 */
+        document.addEventListener('visibilitychange', () => {
+          if (reduced) return;
+          if (document.hidden) {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = null;
+          } else if (started && !rafId) {
+            rafId = requestAnimationFrame(frame);
+          }
+        });
+      })();
+
+      /* ---------- 作品 3D 立方体（360° 拖拽 + 惯性 + 自转） ---------- */
+      (function initCube() {
+        const scene = $('#cubeScene');
+        const cube = $('#artCube');
+        if (!scene || !cube) return;
+        const RXT = -14;                          // 静置时的舒适俯角
+        let rx = RXT, ry = 24, vy = 0, vx = 0;    // ry 水平角 / rx 俯仰角
+        let dragging = false, moved = 0, lx = 0, ly = 0, downFace = null;
+        function apply() { cube.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)'; }
+        apply();
+        scene.addEventListener('pointerdown', e => {
+          dragging = true; moved = 0; lx = e.clientX; ly = e.clientY;
+          downFace = e.target && e.target.closest ? e.target.closest('.cube-face') : null;  // 捕获前先记录按下的面片（setPointerCapture 会重定向后续事件）
+          try { scene.setPointerCapture(e.pointerId); } catch (err) {}
+        });
+        scene.addEventListener('pointermove', e => {
+          if (!dragging) return;
+          const dx = e.clientX - lx, dy = e.clientY - ly;
+          lx = e.clientX; ly = e.clientY;
+          moved += Math.abs(dx) + Math.abs(dy);
+          ry += dx * 0.45;
+          rx = Math.max(-78, Math.min(78, rx - dy * 0.35));
+          vy = Math.max(-8, Math.min(8, dx * 0.45));
+          vx = -dy * 0.35;
+          apply();
+        });
+        function endDrag(e) {
+          if (!dragging) return;
+          dragging = false;
+          if (moved < 8 && downFace) {            // 位移极小视为点击 -> 打开大图预览
+            const src = downFace.getAttribute('data-preview');
+            if (src) openPreview(src, 'image');
+          }
+          downFace = null;
+        }
+        scene.addEventListener('pointerup', endDrag);
+        scene.addEventListener('pointercancel', endDrag);
+        if (!reduced) {
+          (function loop() {
+            if (!dragging) {
+              ry += 0.15 + vy;                    // 惯性衰减后回落为匀速自转
+              rx = Math.max(-78, Math.min(78, rx + vx));
+              vx *= 0.94; vy *= 0.94;
+              rx += (RXT - rx) * 0.008;           // 缓慢回到舒适俯角
+              apply();
+            }
+            requestAnimationFrame(loop);
+          })();
+        }
+      })();
+
+      /* ---------- 指尖四叶草 · 拖动轨迹 + 点击绽放（对象池 + 双重限流 + 总量上限） ---------- */
+      (function initPointerFx() {
+        // 注：不再因 prefers-reduced-motion 完全禁用——特效为用户主动交互的短暂反馈；
+        // 系统关闭动画时仅放缓节奏（FX_SOFT），保证"点击/移动出特效"始终可用
+        const FX_SOFT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const fx = $('#pointerFx');        // 层A：内容之下（多数粒子）
+        const ov = $('#pointerFxOver');    // 层B：内容之上（少量粒子短暂掠过）
+        if (!fx || !fx.getContext || !ov || !ov.getContext) return;
+        const fctx = fx.getContext('2d');
+        const octx = ov.getContext('2d');
+        let fdpr = 1, fw = 0, fh = 0;
+        function sizeFx() {
+          fdpr = Math.min(window.devicePixelRatio || 1, 2);
+          fw = window.innerWidth; fh = window.innerHeight;
+          fx.width = Math.round(fw * fdpr);
+          fx.height = Math.round(fh * fdpr);
+          ov.width = Math.round(fw * fdpr);
+          ov.height = Math.round(fh * fdpr);
+          // 锁定 CSS 尺寸与位图逻辑尺寸一致：inset:0 会被视口（不含滚动条）拉伸，
+          // 造成绘制坐标相对 clientX/Y 出现 0.8% 左右的压缩偏移；显式定宽高后 1:1 对齐光标
+          fx.style.width = fw + 'px';
+          fx.style.height = fh + 'px';
+          ov.style.width = fw + 'px';
+          ov.style.height = fh + 'px';
+          fctx.setTransform(fdpr, 0, 0, fdpr, 0, 0);
+          octx.setTransform(fdpr, 0, 0, fdpr, 0, 0);
+        }
+        sizeFx();
+        window.addEventListener('resize', sizeFx, { passive: true });
+
+        /* --- 预渲染小贴图：全部 11 种四叶草（32px 缩略，与背景同源）+ 柔光点（低饱和绿/淡金/米白） --- */
+        const CLOVER_MINI = [];
+        for (let n = 1; n <= 11; n++) {
+          const im = new Image();
+          im.src = encodeURI('幸运四叶草/clover/clover' + n + '.png');
+          im.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 32;
+            c.getContext('2d').drawImage(im, 0, 0, 32, 32);
+            CLOVER_MINI.push(c);
+          };
+        }
+        const GLOW = [];
+        ['rgba(168,201,154', 'rgba(233,211,156', 'rgba(247,250,246'].forEach(col => {
+          const c = document.createElement('canvas');
+          c.width = c.height = 48;
+          const g = c.getContext('2d');
+          const grad = g.createRadialGradient(24, 24, 0, 24, 24, 24);
+          grad.addColorStop(0, col + ',0.9)');
+          grad.addColorStop(0.5, col + ',0.35)');
+          grad.addColorStop(1, col + ',0)');
+          g.fillStyle = grad;
+          g.fillRect(0, 0, 48, 48);
+          GLOW.push(c);
+        });
+
+        /* --- 对象池 --- */
+        const pool = [], active = [], MAX_FX = 90;   // 全局粒子上限，超出淘汰最早
+        function acquire() { return pool.pop() || {}; }
+        function release(p) { pool.push(p); }
+        function push(p) {
+          if (active.length >= MAX_FX) release(active.shift());
+          active.push(p);
+          ensureLoop();
+        }
+
+        /* --- 拖动轨迹：微型四叶草/柔光点，上飘 + 摆动 + 缩小 + 线性淡出 --- */
+        function spawnTrail(x, y) {
+          const useClover = CLOVER_MINI.length && Math.random() < 0.6;
+          const over = Math.random() < (FX_SOFT ? 0.35 : 0.5);   // 约半数掠过内容之上，其余垫在内容之下
+          const p = acquire();
+          p.mode = 0;
+          p.layer = over ? 1 : 0;
+          p.x0 = x + (Math.random() - 0.5) * 10;
+          p.y0 = y + (Math.random() - 0.5) * 8;
+          p.t = 0;
+          p.dur = over ? 600 + Math.random() * 300          // 前景掠过更快消散
+                       : 800 + Math.random() * 400;          // 0.8–1.2s 淡出
+          p.a0 = 0.35 + Math.random() * 0.27;                // 0.35–0.62，清晰可见
+          p.size = useClover ? 10 + Math.random() * 8 : 8 + Math.random() * 5;
+          p.spr = useClover ? CLOVER_MINI[(Math.random() * CLOVER_MINI.length) | 0]
+                            : GLOW[(Math.random() * GLOW.length) | 0];
+          p.rise = 10 + Math.random() * 15;                  // 上飘 10–25px
+          p.swayA = 2 + Math.random() * 3;
+          p.swayF = 0.004 + Math.random() * 0.004;
+          p.ph = Math.random() * Math.PI * 2;
+          p.rot = 0; p.vr = 0; p.dist = 0; p.dx = 0; p.dy = 0;
+          push(p);
+        }
+
+        /* --- 点击绽放：5–8 朵微型四叶草缓出散开 + 一圈柔光晕；300ms 连击合并为稍大绽放 --- */
+        let lastBurst = -1e9;
+        function spawnBurst(x, y) {
+          const now = performance.now();
+          const combo = now - lastBurst < 300;               // 连击：合并为一次稍大的绽放
+          if (combo) {                                       // 移除上一簇，只保留最新
+            for (let i = active.length - 1; i >= 0; i--) {
+              const q = active[i];
+              if (q.mode !== 0) { active.splice(i, 1); release(q); }
+            }
+          }
+          lastBurst = now;
+          const boost = combo ? 1.25 : 1;
+          const n = 5 + ((Math.random() * 4) | 0);           // 固定 5–8，不随连击叠加
+          let overLeft = Math.round(n * (0.6 + Math.random() * 0.25));   // 多数在内容之上，点击处清晰可见
+          for (let i = 0; i < n; i++) {
+            const p = acquire();
+            const ang = Math.random() * Math.PI * 2;
+            const over = overLeft-- > 0;
+            p.mode = 1;
+            p.layer = over ? 1 : 0;
+            p.x0 = x + (Math.random() - 0.5) * 6;            // 中心几乎正对点击位置（±3px 微偏移）
+            p.y0 = y + (Math.random() - 0.5) * 6;
+            p.dx = Math.cos(ang); p.dy = Math.sin(ang);
+            p.dist = (16 + Math.random() * 18) * boost;      // 紧凑散开 16–34px（连击稍大）
+            p.t = 0;
+            p.dur = over ? 1200 + Math.random() * 500        // 前景 1.2–1.7s 消散
+                         : 1500 + Math.random() * 600;         // 1.5–2.1s 消失，绽放停留更久
+            p.a0 = 0.35 + Math.random() * 0.25;              // 0.35–0.6，清晰可见
+            p.size = (9 + Math.random() * 6) * boost;
+            p.spr = CLOVER_MINI.length ? CLOVER_MINI[(Math.random() * CLOVER_MINI.length) | 0] : GLOW[0];
+            p.rot = Math.random() * Math.PI * 2;
+            p.vr = (Math.random() - 0.5) * 0.004;
+            p.ph = 0; p.swayA = 0; p.swayF = 0; p.rise = 0;
+            push(p);
+          }
+          const g = acquire();                               // 光晕：直径 10→60px，0.9s，留在内容之下
+          g.mode = 2;
+          g.layer = 0;
+          g.x0 = x; g.y0 = y; g.t = 0; g.dur = 900;
+          g.a0 = 0.3; g.dist = 25 * boost; g.spr = GLOW[0];
+          g.size = 0; g.rot = 0; g.vr = 0; g.ph = 0; g.swayA = 0; g.swayF = 0; g.rise = 0; g.dx = 0; g.dy = 0;
+          push(g);
+        }
+
+        /* --- 渲染循环：仅更新位置/透明度/缩放，无粒子时停帧 --- */
+        let rafId = null, lastT = 0;
+        function loop(now) {
+          const dt = Math.min(now - lastT, 50);
+          lastT = now;
+          fctx.clearRect(0, 0, fw, fh);
+          octx.clearRect(0, 0, fw, fh);
+          try {
+          for (let i = active.length - 1; i >= 0; i--) {
+            const p = active[i];
+            p.t += dt;
+            const k = p.t / p.dur;
+            if (k >= 1) { active.splice(i, 1); release(p); continue; }
+            const ctx = p.layer ? octx : fctx;               // 按粒子所在层分发绘制
+            if (p.mode === 0) {                              // 拖动轨迹
+              p.x = p.x0 + Math.sin(p.t * p.swayF + p.ph) * p.swayA;
+              p.y = p.y0 - p.rise * k;
+              const sz = p.size * (1 - 0.45 * k);            // 逐渐缩小
+              ctx.globalAlpha = p.a0 * (1 - k);              // 线性淡出
+              ctx.drawImage(p.spr, p.x - sz / 2, p.y - sz / 2, sz, sz);
+            } else if (p.mode === 1) {                       // 点击绽放：先快后慢散开
+              const e = 1 - Math.pow(1 - k, 3);
+              const scale = 0.6 + 0.4 * Math.sin(Math.PI * k);  // 0.6→1→缩小
+              const sz = p.size * scale;
+              p.rot += p.vr * dt;
+              ctx.globalAlpha = p.a0 * (1 - k);
+              ctx.save();
+              ctx.translate(p.x0 + p.dx * p.dist * e, p.y0 + p.dy * p.dist * e);
+              ctx.rotate(p.rot);
+              ctx.drawImage(p.spr, -sz / 2, -sz / 2, sz, sz);
+              ctx.restore();
+            } else {                                         // 柔光晕
+              const r = 5 + p.dist * (1 - Math.pow(1 - k, 2));
+              ctx.globalAlpha = p.a0 * (1 - k);
+              ctx.drawImage(p.spr, p.x0 - r, p.y0 - r, r * 2, r * 2);
+            }
+          }
+          fctx.globalAlpha = 1;
+          octx.globalAlpha = 1;
+          if (active.length) rafId = requestAnimationFrame(loop);
+          else { rafId = null; fctx.clearRect(0, 0, fw, fh); octx.clearRect(0, 0, fw, fh); }
+          } catch (err) { rafId = null; }
+        }
+        function ensureLoop() {
+          if (!rafId) { lastT = performance.now(); rafId = requestAnimationFrame(loop); }
+        }
+
+        /* --- 指针事件：移动即爆发轨迹（免按下，18–30px 且 ≤20 个/秒），轻点出绽放 --- */
+        let down = false, lx = null, ly = 0, acc = 0, nextGap = 30, lastSpawn = 0, moved = 0;
+        window.addEventListener('pointerdown', e => {
+          if (e.button !== undefined && e.button !== 0) return;
+          down = true; lx = e.clientX; ly = e.clientY;
+          acc = 0; moved = 0; lastSpawn = 0; nextGap = (FX_SOFT ? 26 : 18) + Math.random() * 12;
+        }, { passive: true });
+        window.addEventListener('pointermove', e => {
+          if (lx === null) { lx = e.clientX; ly = e.clientY; return; }   // 首次移动仅校准坐标
+          const dx = e.clientX - lx, dy = e.clientY - ly;
+          lx = e.clientX; ly = e.clientY;
+          if (down) moved += Math.abs(dx) + Math.abs(dy);
+          acc += Math.hypot(dx, dy);
+          const now = performance.now();
+          if (acc >= nextGap && now - lastSpawn >= (FX_SOFT ? 90 : 50)) {  // 50ms ≈ 每秒上限 20 个
+            acc -= nextGap;
+            nextGap = (FX_SOFT ? 26 : 18) + Math.random() * 12;
+            lastSpawn = now;
+            spawnTrail(e.clientX, e.clientY);
+          }
+        }, { passive: true });
+        window.addEventListener('pointerup', e => {
+          if (!down) return;
+          down = false;
+          if (moved < 24) spawnBurst(e.clientX, e.clientY);   // 容忍轻微手抖，确保点击位置出绽放
+        }, { passive: true });
+        window.addEventListener('pointercancel', () => { down = false; }, { passive: true });
+      })();
 
       /* ---------- 气泡反馈 ---------- */
       let toastTimer;
