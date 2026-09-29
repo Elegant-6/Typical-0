@@ -22,6 +22,7 @@
       --line: #D1E0D9;
       --line-deep: #B9CFC4;
       --line-khaki: #D5C49C;
+      --line-sage: #8E9A7C;
       --texture: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D1E0D9' fill-opacity='0.4'%3E%3Ccircle cx='18' cy='20' r='1.4'/%3E%3Ccircle cx='58' cy='36' r='1'/%3E%3Ccircle cx='40' cy='72' r='0.8'/%3E%3Ccircle cx='12' cy='58' r='0.6'/%3E%3Ccircle cx='70' cy='10' r='1.1'/%3E%3C/g%3E%3C/svg%3E");
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -99,7 +100,8 @@
       background-image: radial-gradient(var(--line-deep) 0.5px, transparent 0.5px);
       background-size: 13px 13px; opacity: 0.22;
     }
-    .bento-card:hover { border-color: var(--blue); box-shadow: 0 18px 42px -16px rgba(115, 166, 196, 0.35); }
+    /* 悬停：外框虚线由浅卡其转为鼠尾草灰绿棕，光晕同步换色 */
+    .bento-card:hover { border-color: var(--line-sage); box-shadow: 0 18px 42px -16px rgba(142, 154, 124, 0.32); }
     .bento-inner { position: relative; z-index: 1; height: 100%; padding: 24px; }
 
     /* ---------- 手账贴纸 / 素材层 ---------- */
@@ -118,6 +120,7 @@
     .tape-blue { background: rgba(148, 191, 216, 0.45); }
     .tape-dot { background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 2px); background-size: 8px 8px; }
     .tape-line { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.4) 0 4px, transparent 4px 10px); }
+    .tape-oat { background: rgba(238, 230, 214, 0.9); }
 
     .ticket {
       position: relative; background: linear-gradient(180deg, #fdfaf2, #f6efdd);
@@ -301,7 +304,7 @@
     /* ---------- 手工视频面板（右，窄幅衬托） ---------- */
     .video-panel { flex: 0 1 320px; min-width: 240px; display: flex; flex-direction: column; gap: 10px; margin-right: calc(33.333% - 160px); }
     /* 浅卡其相框：包裹视频画面 */
-    .video-frame { padding: 12px; border-radius: 1.1rem; background: linear-gradient(180deg, #efe6d0, #dccfae); box-shadow: inset 0 0 0 1px rgba(120, 100, 70, 0.18), inset 0 4px 9px rgba(120, 100, 70, 0.2), 0 16px 32px -16px rgba(92, 78, 52, 0.45); }
+    .video-frame { position: relative; padding: 12px; border-radius: 1.1rem; background: linear-gradient(180deg, #efe6d0, #dccfae); box-shadow: inset 0 0 0 1px rgba(120, 100, 70, 0.18), inset 0 4px 9px rgba(120, 100, 70, 0.2), 0 16px 32px -16px rgba(92, 78, 52, 0.45); }
     .handcraft-video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #101410; border-radius: 8px; box-shadow: 0 0 0 1px rgba(120, 100, 70, 0.28), 0 2px 8px rgba(60, 50, 30, 0.35); }
     .video-caption { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--ink-soft); }
     /* 项目栏内视频条目附属的在线访问链接 */
@@ -544,6 +547,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <div class="video-frame">
+                <div class="tape tape-oat" style="top:-11px; left:50%; margin-left:-54px; width:108px; transform:rotate(-3.5deg);"></div>
                 <video class="handcraft-video" controls preload="metadata" playsinline src="坦克大战.mp4"></video>
               </div>
               <div class="flex items-center justify-between gap-3 mt-3">
@@ -553,6 +557,7 @@
             </div>
             <div>
               <div class="video-frame">
+                <div class="tape tape-oat" style="top:-11px; left:50%; margin-left:-46px; width:92px; transform:rotate(4deg);"></div>
                 <video class="handcraft-video" controls preload="metadata" playsinline src="诗月模型 .mp4"></video>
               </div>
               <div class="flex items-center justify-between gap-3 mt-3">
