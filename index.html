@@ -84,9 +84,10 @@
     .bento-card {
       position: relative;
       background: var(--paper-card);
-      border: 1px solid var(--line);
+      border: 2.5px dashed var(--line-deep);
       border-radius: 1.5rem;
-      overflow: hidden;
+      /* 不裁切：胶带、邮票、标签等装饰可以跨出卡片、压在虚线边框之上 */
+      overflow: visible;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       box-shadow: 0 14px 32px -16px rgba(60, 74, 68, 0.18);
@@ -96,6 +97,15 @@
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
       background-image: radial-gradient(var(--line-deep) 0.5px, transparent 0.5px);
       background-size: 13px 13px; opacity: 0.22;
+    }
+    /* 卡片角部装饰：左下 / 右上各一枚四叶草，中心正对卡片圆角，一半压在虚线边框之上 */
+    .bento-card::after {
+      content: ""; position: absolute; inset: -16px; pointer-events: none; z-index: 0;
+      background-image: url('幸运四叶草/clover/clover1.png'), url('幸运四叶草/clover/clover6.png');
+      background-repeat: no-repeat, no-repeat;
+      background-size: 66px 66px, 62px 62px;
+      background-position: calc(100% - 49px) -17px, -15px calc(100% - 47px);
+      opacity: 0.34;
     }
     .bento-card:hover { border-color: var(--blue); box-shadow: 0 18px 42px -16px rgba(115, 166, 196, 0.35); }
     .bento-inner { position: relative; z-index: 1; height: 100%; padding: 24px; }
@@ -284,9 +294,10 @@
     .cube-scene { --cube: 248px; width: var(--cube); height: var(--cube); perspective: 1050px; touch-action: pan-y; cursor: grab; }
     .cube-scene:active { cursor: grabbing; }
     #artCube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; will-change: transform; }
-    .cube-face { position: absolute; inset: 0; border-radius: 10px; overflow: hidden; background: #fff; border: 1px solid var(--line-deep); box-shadow: inset 0 0 0 3px rgba(247, 250, 246, 0.65); }
-    .cube-face img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
-    .cube-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 8px 6px; font-size: 0.68rem; letter-spacing: 1px; text-align: center; color: #fff; background: linear-gradient(to top, rgba(60, 74, 68, 0.75), transparent); }
+    /* 木质相框：面片本身即框体（黑咖啡棕渐变 + 细木纹），图片内缩 */
+    .cube-face { position: absolute; inset: 0; border-radius: 12px; overflow: hidden; padding: 11px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 2px, rgba(255, 255, 255, 0) 2px 8px), linear-gradient(145deg, #4a3529, #2b1e16); box-shadow: inset 0 0 0 1px rgba(240, 232, 220, 0.16), inset 0 0 0 2px rgba(28, 18, 12, 0.55), inset 0 4px 10px rgba(0, 0, 0, 0.5), 0 8px 20px -10px rgba(28, 18, 12, 0.6); }
+    .cube-face img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; border-radius: 5px; box-shadow: 0 0 0 1px rgba(240, 232, 220, 0.22), 0 2px 8px rgba(0, 0, 0, 0.45); }
+    .cube-label { position: absolute; left: 11px; right: 11px; bottom: 11px; padding: 16px 8px 6px; border-radius: 0 0 5px 5px; font-size: 0.68rem; letter-spacing: 1px; text-align: center; color: #fff; background: linear-gradient(to top, rgba(43, 30, 22, 0.78), transparent); }
     .cube-face.front  { transform: rotateY(0deg)   translateZ(calc(var(--cube) / 2)); }
     .cube-face.right  { transform: rotateY(90deg)  translateZ(calc(var(--cube) / 2)); }
     .cube-face.back   { transform: rotateY(180deg) translateZ(calc(var(--cube) / 2)); }
@@ -297,18 +308,20 @@
 
     /* ---------- 手工视频面板（右，窄幅衬托） ---------- */
     .video-panel { flex: 0 1 320px; min-width: 240px; display: flex; flex-direction: column; gap: 10px; margin-right: calc(33.333% - 160px); }
-    .handcraft-video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #101410; border: 1px solid var(--line-deep); border-radius: 1rem; box-shadow: 0 16px 32px -16px rgba(60, 74, 68, 0.45); }
+    /* 浅卡其相框：包裹视频画面 */
+    .video-frame { padding: 12px; border-radius: 1.1rem; background: linear-gradient(180deg, #efe6d0, #dccfae); box-shadow: inset 0 0 0 1px rgba(120, 100, 70, 0.18), inset 0 4px 9px rgba(120, 100, 70, 0.2), 0 16px 32px -16px rgba(92, 78, 52, 0.45); }
+    .handcraft-video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; background: #101410; border-radius: 8px; box-shadow: 0 0 0 1px rgba(120, 100, 70, 0.28), 0 2px 8px rgba(60, 50, 30, 0.35); }
     .video-caption { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--ink-soft); }
 
     /* ---------- 证书电影胶片（自动滚动） ---------- */
-    .filmstrip { position: relative; background: linear-gradient(180deg, #242a24, #181d18); border-radius: 1.1rem; padding: 6px 0; box-shadow: 0 16px 34px -18px rgba(20, 30, 22, 0.6), inset 0 0 0 1px rgba(247, 250, 246, 0.08); }
-    .film-holes { height: 12px; margin: 3px 14px; background-image: radial-gradient(4px 3px at 11px 6px, rgba(247, 250, 246, 0.85) 55%, transparent 62%); background-size: 22px 12px; background-repeat: repeat-x; }
+    .filmstrip { position: relative; background: linear-gradient(180deg, #4a3529, #2b1e16); border-radius: 1.1rem; padding: 6px 0; box-shadow: 0 16px 34px -18px rgba(28, 18, 12, 0.6), inset 0 0 0 1px rgba(240, 232, 220, 0.09); }
+    .film-holes { height: 12px; margin: 3px 14px; background-image: radial-gradient(4px 3px at 11px 6px, rgba(240, 232, 220, 0.6) 55%, transparent 62%); background-size: 22px 12px; background-repeat: repeat-x; }
     .film-window { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
     .film-track { display: flex; width: max-content; animation: filmScroll 30s linear infinite; }
     .filmstrip:hover .film-track { animation-play-state: paused; }
     @keyframes filmScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .film-set { display: flex; gap: 14px; padding: 8px 7px; }
-    .film-frame { position: relative; flex: 0 0 auto; width: 164px; aspect-ratio: 3 / 4; border-radius: 7px; overflow: hidden; border: 1px solid rgba(247, 250, 246, 0.22); background: #0e120e; cursor: zoom-in; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.5); }
+    .film-frame { position: relative; flex: 0 0 auto; width: 164px; aspect-ratio: 3 / 4; border-radius: 7px; overflow: hidden; border: 1px solid rgba(240, 232, 220, 0.22); background: #0e120e; cursor: zoom-in; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.5); }
     .film-frame img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.05); transition: transform 0.3s, filter 0.3s; }
     .film-frame:hover img { transform: scale(1.07); filter: brightness(1.12); }
     .film-no { position: absolute; top: 5px; left: 5px; font-family: Georgia, serif; font-size: 0.56rem; letter-spacing: 1px; color: rgba(247, 250, 246, 0.85); background: rgba(0, 0, 0, 0.5); padding: 1px 6px; border-radius: 999px; }
@@ -352,7 +365,7 @@
 
       <!-- ============ 核心主卡片（首屏叙事） ============ -->
       <section id="hero" class="bento-card md:col-span-4 reveal" data-delay="0">
-        <div class="tape" style="top:-10px; left:26px;"></div>
+        <div class="tape" style="top:-5px; left:26px;"></div>
         <div class="deco kraft hide-sm" style="right:16px; top:14px; transform:rotate(3deg);">简历 RESUME</div>
         <div class="deco news-clip hide-sm" style="right:12px; top:120px;">
           <div class="news-head">晨 报 · DAILY</div>
@@ -591,7 +604,9 @@
               <div class="cube-hint"><i data-lucide="rotate-3d" class="w-3.5 h-3.5"></i>拖拽旋转 360° · 点击放大</div>
             </div>
             <div class="video-panel">
-              <video class="handcraft-video" controls preload="none" playsinline poster="首页.jpg" src="手工.mp4"></video>
+              <div class="video-frame">
+                <video class="handcraft-video" controls preload="none" playsinline poster="首页.jpg" src="手工.mp4"></video>
+              </div>
               <div class="video-caption"><i data-lucide="clapperboard" class="w-4 h-4" style="color:var(--blue-hover);"></i>手工视频 · 素描手作全过程</div>
             </div>
           </div>
