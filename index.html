@@ -98,11 +98,12 @@
       background-image: radial-gradient(var(--line-deep) 0.5px, transparent 0.5px);
       background-size: 13px 13px; opacity: 0.22;
     }
-    /* 卡片外边框装饰：四叶草角簇（参考 边框1 / 边框2 蓝图），压在虚线边框之上 */
+    /* 卡片外边框装饰：四叶草叶片角簇（参考 边框1 / 边框2 蓝图），压在虚线边框之上。
+       背景取固定像素尺寸（素材 320px 宽 → 显示 200px），使叶片渲染为 28~44px，与鼠标点击/移动特效同尺寸 */
     .bento-card::after {
-      content: ""; position: absolute; inset: -18px; pointer-events: none; z-index: 0;
+      content: ""; position: absolute; inset: -14px; pointer-events: none; z-index: 0;
       background-repeat: no-repeat, no-repeat;
-      background-size: 58% auto, 58% auto;
+      background-size: 200px auto, 200px auto;
       opacity: 0.5;
     }
     /* 边框1 效果：左上角簇 + 右下角簇 */
